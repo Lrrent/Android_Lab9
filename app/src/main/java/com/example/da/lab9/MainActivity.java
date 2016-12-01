@@ -58,15 +58,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         findAllView();
-        update.setVisibility(GONE);
+        update.setVisibility(GONE);  //没有结果时隐藏控件
         tody.setVisibility(GONE);
         search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String input = citySearch.getText().toString();
-                new searchAsyncTask().execute(input);
-
-                //点击search按钮时开启异步任务访问网站
+                new searchAsyncTask().execute(input);  //执行异步线程,查询天气并更新UI
             }
         });
     }
@@ -93,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean checkNetwork(){
         ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected()){
+        if (networkInfo != null && networkInfo.isConnected()){ //找到网络并且网络可连接
             return true;
         }
         else {
@@ -105,7 +103,6 @@ public class MainActivity extends AppCompatActivity {
         //处理异步任务,即从网络中获得数据
         @Override
         protected String doInBackground(String... input) {
-            //Log.i(urls[0], "doInBackground: ");
             String weatherInfo = "";
             if (!checkNetwork()){  //网络不可用的情况
                 //Log.i("当前没有可用网络", "doInBackground: ");
@@ -140,17 +137,17 @@ public class MainActivity extends AppCompatActivity {
                        for(int i = 0;i<parseResult.size();i++){
                             Log.i("parseResult",parseResult.get(i).toString());
                         }
-                       String cityRs = parseResult.get(1).toString();
+                       String cityRs = parseResult.get(1).toString();  //获得天气
                        String timeRs = parseResult.get(3).toString().split(" ")[1]+" 更新";
-                       String tempBelowRs = parseResult.get(8).toString();
+                       String tempBelowRs = parseResult.get(8).toString();  //获得温度
                        String[] weatherTody = parseResult.get(4).toString().split("；"); //获得今天的天气情况
-                       String tempAboveRs = weatherTody[0].split("：")[2];
+                       String tempAboveRs = weatherTody[0].split("：")[2]; 
                        String windRs = weatherTody[1].split("：")[1];   //风力
                        String humidityRs = weatherTody[2];              //湿度
                        String airRs = parseResult.get(5).toString().split("。")[1];  //获得空气质量
                        List<Map<String,String>> list = getIndex(parseResult.get(6).toString());  //获得相关指数
-                       List<Map<String,String>> nextSeven = getNextSeven(parseResult);
-                       updateView(cityRs,timeRs,tempAboveRs,tempBelowRs,humidityRs,airRs,windRs,list,nextSeven);
+                       List<Map<String,String>> nextSeven = getNextSeven(parseResult);   //存储最近7天的天气情况
+                       updateView(cityRs,timeRs,tempAboveRs,tempBelowRs,humidityRs,airRs,windRs,list,nextSeven);//更新UI
                    } catch (XmlPullParserException e) {
                        e.printStackTrace();
                    } catch (IOException e) {
@@ -161,7 +158,8 @@ public class MainActivity extends AppCompatActivity {
            }
     }
     //更新控件内容
-    private  void updateView(String cityRs,String timeRs,String tempAboveRs,String tempBelowRs,String humidityRs,String airRs,String windRs,List<Map<String,String>> list,List<Map<String,String>> nextSevenList){
+    private  void updateView(String cityRs,String timeRs,String tempAboveRs,String tempBelowRs,String humidityRs,String airRs,
+    						String windRs,List<Map<String,String>> list,List<Map<String,String>> nextSevenList){
         city.setText(cityRs);
         time.setText(timeRs);
         temp_above.setText(tempAboveRs);
@@ -170,7 +168,8 @@ public class MainActivity extends AppCompatActivity {
         humidity.setText(humidityRs);
         wind.setText(windRs);
         //更新列表
-        SimpleAdapter simpleAdapter = new SimpleAdapter(this,list,R.layout.item,new String[]{"index","content"},new int[]{R.id.index,R.id.content});
+        SimpleAdapter simpleAdapter = new SimpleAdapter(this,list,R.layout.item,new String[]{"index","content"},
+        												new int[]{R.id.index,R.id.content});
         indexList.setAdapter(simpleAdapter);
         //最近7天天气
         RecyleViewAdapter adapter = new RecyleViewAdapter(this,nextSevenList);
@@ -200,14 +199,14 @@ public class MainActivity extends AppCompatActivity {
             }
         return data;
     }
-    //当网络可用时,根据输入大的城市名查询天气情况
+    //当网络可用时,根据输入的城市名查询天气情况
     private String getWeather(String city){
         HttpURLConnection connection = null;
         StringBuilder response = new StringBuilder();
         try{
             connection = (HttpURLConnection) ((new URL(url.toString()).openConnection()));
             connection.setRequestMethod("POST");
-            connection.setReadTimeout(8000); //设置超时
+            connection.setReadTimeout(8000); //设置读取数据超时
             connection.setConnectTimeout(80000); //设置连接超时
             DataOutput out = new DataOutputStream(connection.getOutputStream());
             city = URLEncoder.encode(city,"utf-8");
@@ -215,7 +214,6 @@ public class MainActivity extends AppCompatActivity {
             InputStream in = connection.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             String line;
-            int i = 0;
             while((line=reader.readLine())!=null){  //获得返回的数据,并读入字符串
                 response.append(line);
             }
@@ -238,10 +236,10 @@ public class MainActivity extends AppCompatActivity {
         List<String>  result = new ArrayList<>();
         while (eventType != XmlPullParser.END_DOCUMENT){
             switch (eventType){
-                case XmlPullParser.START_TAG:
-                    if ("string".equals(parser.getName())){
-                        String str = parser.nextText();
-                        result.add(str);
+                case XmlPullParser.START_TAG:    //位置在标签的开始
+                    if ("string".equals(parser.getName())){ //标签为string
+                        String str = parser.nextText();   //获得标签之中的内容
+                        result.add(str);     //加入到list中
                     }
                     break;
                 case XmlPullParser.END_TAG:break;
